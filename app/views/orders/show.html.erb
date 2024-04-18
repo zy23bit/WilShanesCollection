@@ -1,0 +1,59 @@
+<% if @order %>
+  <div class="container mt-4">
+    <div class="card">
+      <div class="card-header">
+        <h1 class="card-title">Order Summary</h1>
+      </div>
+      <div class="card-body">
+        <h3>Order Details</h3>
+        <dl class="row">
+          <dt class="col-sm-3">Order ID:</dt>
+          <dd class="col-sm-9"><%= @order.id %></dd>
+
+          <dt class="col-sm-3">Order Status:</dt>
+          <dd class="col-sm-9"><%= @order.status.capitalize %></dd>
+
+          <dt class="col-sm-3">Shipping Address:</dt>
+          <dd class="col-sm-9">
+            <% address = @order.shipping_address %>
+            <%= address.name %>,<%= address.address %>, <%= address.city %>, <%= address.province %>, <%= address.zip %>
+          </dd>
+
+          <dt class="col-sm-3">Tax:</dt>
+          <dd class="col-sm-9"><%= number_to_currency(@order.tax) %></dd>
+
+          <dt class="col-sm-3">Total with Tax:</dt>
+          <dd class="col-sm-9"><%= number_to_currency(@order.total_with_tax) %></dd>
+        </dl>
+
+        <h3>Items</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Product Name</th>
+              <th>Quantity</th>
+              <th>Price</th>
+              <th>Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @order.order_items.each do |item| %>
+              <tr>
+                <td><%= item.product.name %></td>
+                <td><%= item.quantity %></td>
+                <td><%= number_to_currency(item.price_at_time) %></td>
+                <td><%= number_to_currency(item.quantity * item.price_at_time) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+<% else %>
+  <div class="container mt-4">
+    <div class="alert alert-warning" role="alert">
+      Order information is not available.
+    </div>
+  </div>
+<% end %>
