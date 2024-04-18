@@ -10,6 +10,8 @@ ActiveAdmin.register Product do
     column :category
     column :featured
     column :onSale
+    column :sales_price
+    column :discount
     actions
   end
 
