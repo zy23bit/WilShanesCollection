@@ -1,0 +1,6 @@
+<% if @static_page %>
+  <h1><%= @static_page.title %></h1>
+  <%= raw @static_page.content %>
+<% else %>
+  <p>The requested page could not be found.</p>
+<% end %>
