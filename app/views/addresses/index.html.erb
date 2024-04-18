@@ -1,0 +1,36 @@
+<h1 class="text-center my-4">Your Addresses</h1>
+
+<div class="table-responsive">
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th scope="col">Name</th>
+        <th scope="col">Address</th>
+        <th scope="col">City</th>
+        <th scope="col">Province</th>
+        <th scope="col">Zip</th>
+        <th scope="col" class="text-center">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @addresses.each do |address| %>
+        <tr>
+          <td data-label="Name"><%= address.name %></td>
+          <td data-label="Address"><%= address.address %></td>
+          <td data-label="City"><%= address.city %></td>
+          <td data-label="Province"><%= address.province %></td>
+          <td data-label="Zip"><%= address.zip %></td>
+          <td data-label="Actions" class="text-center">
+            <%= link_to 'Edit', edit_user_address_path(@user, address), class: 'btn btn-sm btn-primary me-1' %>
+            <%= link_to 'Delete', user_address_path(@user, address),
+                        method: :delete, data: { confirm: 'Are you sure?' }, class: 'btn btn-sm btn-danger' %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<div class="text-center mt-4">
+  <%= link_to 'Add New Address', new_user_address_path(@user), class: 'btn btn-lg btn-success' %>
+</div>
