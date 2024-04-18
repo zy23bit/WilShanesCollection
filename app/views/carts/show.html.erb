@@ -16,14 +16,26 @@
           <% @cart_items.each do |item| %>
             <tr>
               <td><%= item.product.name %></td>
-              <td><%= number_to_currency(item.product.price) %></td>
+              <td>
+                <% if item.product.sales_price.present? %>
+                  <span class="text-danger"><%= number_to_currency(item.product.sales_price) %></span>
+                <% else %>
+                  <%= number_to_currency(item.product.price) %>
+                <% end %>
+              </td>
               <td>
                 <%= form_with(model: [item], local: true, class: 'd-flex') do |f| %>
                   <%= f.number_field :quantity, value: item.quantity, min: 1, class: 'form-control', style: 'width: 70px; margin-right: 10px;' %>
                   <%= f.submit 'Update', class: 'btn btn-info btn-sm' %>
                 <% end %>
               </td>
-              <td><%= number_to_currency(item.quantity * item.product.price) %></td>
+              <td>
+                <% if item.product.sales_price.present? %>
+                  <%= number_to_currency(item.quantity * item.product.sales_price) %>
+                <% else %>
+                  <%= number_to_currency(item.quantity * item.product.price) %>
+                <% end %>
+              </td>
               <td>
                 <%= button_to 'Remove', cart_item_path(item), method: :delete, data: { confirm: 'Are you sure?' }, class: 'btn btn-danger btn-sm' %>
               </td>
@@ -33,7 +45,9 @@
       </table>
     </div>
     <div class="d-flex justify-content-between align-items-center">
-      <h4>Total: <%= number_to_currency(@cart_items.sum { |item| item.quantity * item.product.price }) %></h4>
+      <h4>Total:
+        <%= number_to_currency(@cart_items.sum { |item| item.quantity * (item.product.sales_price.present? ? item.product.sales_price : item.product.price) }) %>
+      </h4>
       <%= link_to 'Proceed to Payment', new_payment_path, class: 'btn btn-secondary text-white ms-3' %>
     </div>
   <% else %>

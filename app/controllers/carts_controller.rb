@@ -1,9 +1,6 @@
-# app/controllers/carts_controller.rb
-
 class CartsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_cart, only: [:show]
-
   def show
     @cart_items = @cart.cart_items
   end
