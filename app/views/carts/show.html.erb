@@ -17,7 +17,7 @@
             <tr>
               <td><%= item.product.name %></td>
               <td>
-                <% if item.product.sales_price.present? %>
+                <% if item.product.onSale %>
                   <span class="text-danger"><%= number_to_currency(item.product.sales_price) %></span>
                 <% else %>
                   <%= number_to_currency(item.product.price) %>
@@ -30,7 +30,7 @@
                 <% end %>
               </td>
               <td>
-                <% if item.product.sales_price.present? %>
+                <% if item.product.onSale %>
                   <%= number_to_currency(item.quantity * item.product.sales_price) %>
                 <% else %>
                   <%= number_to_currency(item.quantity * item.product.price) %>

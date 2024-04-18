@@ -6,7 +6,7 @@ class PaymentsController < ApplicationController
     @user_addresses = current_user.addresses
     @cart_items = @cart.cart_items
     @subtotal = @cart_items.sum do |item|
-      if item.product.sales_price.present?
+      if item.product.onSale
         item.quantity * item.product.sales_price
       else
         item.quantity * item.product.price
@@ -35,7 +35,7 @@ class PaymentsController < ApplicationController
 
     if address
       subtotal = @cart.cart_items.sum do |item|
-        if item.product.sales_price.present?
+        if item.product.onSale
           item.quantity * item.product.sales_price
         else
           item.quantity * item.product.price
@@ -71,7 +71,7 @@ class PaymentsController < ApplicationController
         @order.order_items.build(
           product_id: item.product_id,
           quantity: item.quantity,
-          price_at_time: item.product.sales_price.presence || item.product.price
+          price_at_time: item.product.onSale ? item.product.sales_price : item.product.price
         )
       end
 
