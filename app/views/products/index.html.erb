@@ -1,0 +1,59 @@
+<div class="container mt-5">
+  <h1 class="mb-4">Products</h1>
+  <%= form_with(url: products_path, method: :get, local: true, class: 'card card-body shadow mb-4') do |form| %>
+    <div class="row g-3 align-items-center justify-content-start">
+      <div class="col-md">
+        <%= form.label :category_id, "Category", class: "form-label" %>
+        <%= form.collection_select :category_id, Category.all, :id, :name, { include_blank: 'All Categories' }, { class: "form-select" } %>
+      </div>
+      <div class="col-md-auto">
+        <%= form.label :on_sale, "On Sale", class: "form-check-label" %>
+        <%= form.check_box :on_sale, { class: "form-check-input" }, '1', nil %>
+      </div>
+      <div class="col-md-auto">
+        <%= form.label :new_products, "New Products", class: "form-check-label" %>
+        <%= form.check_box :new_products, { class: "form-check-input" }, '1', nil %>
+      </div>
+      <div class="col-md-auto">
+        <%= form.submit "Filter", class: "btn btn-primary" %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Product listing -->
+  <div class="row">
+    <% @products.each do |product| %>
+      <div class="col-md-4 mb-4">
+        <div class="card h-100 border-0 shadow">
+          <%= link_to product_path(product), class: 'text-decoration-none text-dark' do %>
+            <% if product.product_picture.attached? %>
+              <%= image_tag(url_for(product.product_picture), class: 'card-img-top', style: 'height: 200px; object-fit: cover;') %>
+            <% else %>
+              <div class="card-img-top bg-light d-flex justify-content-center align-items-center" style="height: 200px;">
+                <span>No image to display</span>
+              </div>
+            <% end %>
+            <div class="card-body d-flex flex-column">
+              <% if product.onSale %>
+                <div class="badge bg-danger position-absolute" style="top: 10px; right: 10px;">On Sale!</div>
+              <% end %>
+              <h5 class="card-title"><%= product.name %></h5>
+              <p class="card-text mb-4"><%= truncate(product.description, length: 80) %></p>
+              <div class="mt-auto">
+                <% if product.onSale %>
+                  <p class="text-danger"><del><%= number_to_currency(product.price) %></del> <%= number_to_currency(product.sales_price) %></p>
+                <% else %>
+                  <p class="fw-bold"><%= number_to_currency(product.price) %></p>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="pagination justify-content-center">
+    <%= paginate @products %>
+  </div>
+</div>
