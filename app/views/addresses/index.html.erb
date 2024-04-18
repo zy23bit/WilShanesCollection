@@ -21,9 +21,9 @@
           <td data-label="Province"><%= address.province %></td>
           <td data-label="Zip"><%= address.zip %></td>
           <td data-label="Actions" class="text-center">
-            <%= link_to 'Edit', edit_user_address_path(@user, address), class: 'btn btn-sm btn-primary me-1' %>
+            <%= link_to 'Edit', edit_user_address_path(@user, address), class: 'btn btn-secondary text-white ms-3' %>
             <%= link_to 'Delete', user_address_path(@user, address),
-                        method: :delete, data: { confirm: 'Are you sure?' }, class: 'btn btn-sm btn-danger' %>
+                        method: :delete, data: { confirm: 'Are you sure?' }, class: 'btn btn-secondary text-white ms-3' %>
           </td>
         </tr>
       <% end %>
@@ -32,5 +32,5 @@
 </div>
 
 <div class="text-center mt-4">
-  <%= link_to 'Add New Address', new_user_address_path(@user), class: 'btn btn-lg btn-success' %>
+  <%= link_to 'Add New Address', new_user_address_path(@user), class: 'btn btn-secondary text-white ms-3' %>
 </div>
