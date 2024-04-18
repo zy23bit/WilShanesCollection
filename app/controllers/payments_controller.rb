@@ -5,7 +5,13 @@ class PaymentsController < ApplicationController
   def new
     @user_addresses = current_user.addresses
     @cart_items = @cart.cart_items
-    @subtotal = @cart_items.sum { |item| item.quantity * item.product.price }
+    @subtotal = @cart_items.sum do |item|
+      if item.product.sales_price.present?
+        item.quantity * item.product.sales_price
+      else
+        item.quantity * item.product.price
+      end
+    end
     @selected_address = current_user.addresses.first
 
     Rails.logger.debug "Selected Address: #{@selected_address}"
@@ -28,10 +34,18 @@ class PaymentsController < ApplicationController
     Rails.logger.debug "Address for Tax Calculation: #{address}"
 
     if address
-      subtotal = @cart.cart_items.sum { |item| item.quantity * item.product.price }
+      subtotal = @cart.cart_items.sum do |item|
+        if item.product.sales_price.present?
+          item.quantity * item.product.sales_price
+        else
+          item.quantity * item.product.price
+        end
+      end
       tax = calculate_tax(subtotal, address.province)
       total = subtotal + tax
       Rails.logger.debug "Response Tax: #{tax}, Total: #{total}"
+      session[:tax] = tax
+      session[:total] = total
       render json: { tax: view_context.number_to_currency(tax), total: view_context.number_to_currency(total), province: address.province }
     else
       render json: { error: 'Address not found' }, status: :not_found
@@ -39,8 +53,8 @@ class PaymentsController < ApplicationController
   end
 
   def create
-    @total = params[:payment][:total]
-    @tax = params[:payment][:tax]
+    @tax = session[:tax]
+    @total = session[:total]
     ActiveRecord::Base.transaction do
         # Log the parameters before creating the order
       Rails.logger.debug "Creating order with total_with_tax: #{@total}, Status: 'pending', Shipping Address ID: #{params[:payment][:address_id]}"
@@ -57,7 +71,7 @@ class PaymentsController < ApplicationController
         @order.order_items.build(
           product_id: item.product_id,
           quantity: item.quantity,
-          price_at_time: item.product.price
+          price_at_time: item.product.sales_price.presence || item.product.price
         )
       end
 
