@@ -22,7 +22,13 @@
       <ul class="list-group list-group-flush">
         <% @cart_items.each do |item| %>
           <li class="list-group-item">
-            <%= item.product.name %> - Quantity: <%= item.quantity %> - Price: <%= number_to_currency(item.product.price) %>
+            <%= item.product.name %> - Quantity: <%= item.quantity %> -
+            Price:
+            <% if item.product.sales_price.present? %>
+              <%= number_to_currency(item.product.sales_price) %>
+            <% else %>
+              <%= number_to_currency(item.product.price) %>
+            <% end %>
           </li>
         <% end %>
       </ul>
