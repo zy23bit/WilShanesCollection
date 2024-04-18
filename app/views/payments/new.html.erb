@@ -1,0 +1,72 @@
+<div class="container mt-5">
+  <h2 class="mb-4">Proceed to Payment</h2>
+
+  <%= form_for :payment, url: payments_path, method: :post, html: { class: 'needs-validation', novalidate: true } do |f| %>
+    <div class="mb-3">
+      <%= f.label :address_id, "Select Shipping Address", class: 'form-label', for: "addressSelect" %>
+      <%= f.collection_select :address_id, @user_addresses, :id,
+           ->(address) { "#{address.name},#{address.address}, #{address.city}, #{address.province}, #{address.zip}" },
+           { include_blank: 'Please select an address...' },
+           { id: "addressSelect", onchange: "updateTaxAndTotal()", class: 'form-select' } %>
+      <%= f.hidden_field :shipping_address_id, id: "shippingAddressId" %>
+    </div>
+
+    <div class="mb-3">
+      <%= link_to 'Add New Address', new_user_address_path(current_user, redirect_to: request.fullpath), class: 'btn btn-outline-primary' %>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">
+        <h3 class="mb-0">Your Cart</h3>
+      </div>
+      <ul class="list-group list-group-flush">
+        <% @cart_items.each do |item| %>
+          <li class="list-group-item">
+            <%= item.product.name %> - Quantity: <%= item.quantity %> - Price: <%= number_to_currency(item.product.price) %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <p class="card-text">Subtotal: <%= number_to_currency(@subtotal) %></p>
+        <p class="card-text">Tax: <span id="tax"><%= number_to_currency(@tax) %></span></p>
+        <%= f.hidden_field :tax, value: @tax %>
+        <p class="card-text">Total: <span id="total"><%= number_to_currency(@total) %></span></p>
+        <%= f.hidden_field :total, value: @total %>
+      </div>
+    </div>
+
+    <%= f.submit 'Confirm Payment', class: 'btn btn-success btn-lg btn-block' %>
+  <% end %>
+</div>
+
+<script>
+function updateTaxAndTotal() {
+  const addressSelect = document.getElementById('addressSelect');
+  const addressId = addressSelect.value;
+  console.log('Address ID selected:', addressId);
+
+  if (!addressId) {
+    console.log('No address selected');
+    return;
+  }
+
+  fetch(`/payments/calculate_tax?address_id=${addressId}`)
+    .then(response => {
+      if (!response.ok) throw new Error('Network response was not ok');
+      return response.json();
+    })
+    .then(data => {
+      document.getElementById('tax').textContent = data.tax;
+      document.getElementById('total').textContent = data.total;
+    })
+    .catch(error => {
+      console.error('Error updating tax and total:', error);
+    });
+}
+</script>
+
+
+
