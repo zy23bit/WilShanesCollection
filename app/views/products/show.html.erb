@@ -1,0 +1,45 @@
+<div class="container mt-5">
+  <div class="row">
+    <!-- Product Image -->
+    <div class="col-lg-8 mb-4">
+      <% if @product.commercial_picture.attached? %>
+        <%= image_tag(url_for(@product.commercial_picture), class: 'img-fluid rounded shadow') %>
+      <% else %>
+        <div class="bg-light d-flex justify-content-center align-items-center rounded" style="height: 400px;">
+          <span class="text-muted">No image to display</span>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Product Details -->
+    <div class="col-lg-4">
+      <h1 class="display-6"><%= @product.name %></h1>
+      <% if @product.onSale %>
+        <div class="badge bg-danger mb-2">On Sale!</div>
+        <p class="text-muted"><del>Original: <%= number_to_currency(@product.price) %></del></p>
+        <p class="text-danger fs-4">Sale: <%= number_to_currency(@product.sales_price) %></p>
+      <% else %>
+        <p class="fw-bold fs-4">Price: <%= number_to_currency(@product.price) %></p>
+      <% end %>
+
+      <div class="product-description text-muted mt-3 mb-4">
+        <%= @product.description %>
+      </div>
+
+      <!-- Additional Product Image If Exists -->
+      <% if @product.product_picture.attached? %>
+        <%= image_tag(url_for(@product.product_picture), class: 'img-fluid rounded shadow mt-3') %>
+      <% end %>
+
+      <!-- Navigation & Cart Actions -->
+      <div class="d-grid gap-2 mt-4">
+        <%= link_to 'Back to Products', products_path, class: 'btn btn-outline-secondary' %>
+        <% if user_signed_in? %>
+          <%= button_to 'Add to Cart', add_to_cart_path(@product.id), method: :post, class: 'btn btn-primary' %>
+        <% else %>
+          <%= link_to 'Add to Cart', new_user_session_path, class: 'btn btn-primary' %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
