@@ -3,6 +3,8 @@ class Product < ApplicationRecord
   has_many :order_items
   has_one_attached :product_picture
   has_one_attached :commercial_picture
+  has_one_attached :video
+
 
   def self.ransackable_associations(auth_object = nil)
     ['category', 'order_items']  # Allows searching through category and order_items associations

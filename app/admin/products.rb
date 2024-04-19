@@ -1,5 +1,5 @@
 ActiveAdmin.register Product do
-  permit_params :name, :description, :price, :category_id, :product_picture, :commercial_picture, :featured, :onSale, :discount, :sales_price
+  permit_params :name, :description, :price, :category_id, :product_picture, :commercial_picture, :featured, :onSale, :discount, :sales_price, :video
 
 
   index do
@@ -31,6 +31,8 @@ ActiveAdmin.register Product do
       f.input :category, as: :select, collection: Category.all.collect { |c| [c.name, c.id] }
       f.input :product_picture, as: :file, hint: f.object.product_picture.attached? ? image_tag(url_for(f.object.product_picture)) : content_tag(:span, "No image yet")
       f.input :commercial_picture, as: :file, hint: f.object.commercial_picture.attached? ? image_tag(url_for(f.object.commercial_picture)) : content_tag(:span, "No image yet")
+      f.input :video, as: :file, hint: f.object.video.present? ?
+      video_tag(url_for(f.object.video), controls: true, size: "100x100") : content_tag(:span, "No video yet")
       f.input :onSale
       f.input :discount
       f.input :sales_price, input_html: { disabled: true }
