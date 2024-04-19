@@ -46,6 +46,7 @@ class PaymentsController < ApplicationController
       Rails.logger.debug "Response Tax: #{tax}, Total: #{total}"
       session[:tax] = tax
       session[:total] = total
+      session[:address] = address
       render json: { tax: view_context.number_to_currency(tax), total: view_context.number_to_currency(total), province: address.province }
     else
       render json: { error: 'Address not found' }, status: :not_found
@@ -53,37 +54,60 @@ class PaymentsController < ApplicationController
   end
 
   def create
+    Rails.logger.debug "Stripe Token Received: #{params[:stripeToken]}"
     @tax = session[:tax]
     @total = session[:total]
-    ActiveRecord::Base.transaction do
-        # Log the parameters before creating the order
-      Rails.logger.debug "Creating order with total_with_tax: #{@total}, Status: 'pending', Shipping Address ID: #{params[:payment][:address_id]}"
-      @order = current_user.orders.create!(
-        total_with_tax: @total,
-        tax: @tax,
-        status: :pending,
-        shipping_address_id: params[:payment][:address_id]
-      )
-      Rails.logger.debug "Address ID received: #{params[:payment][:address_id]}"
-      raise "Cart items are empty" if @cart.cart_items.empty?
+    @address = params[:payment][:address_id]
+    token = params[:stripe_token]
 
-      @cart.cart_items.each do |item|
-        @order.order_items.build(
-          product_id: item.product_id,
-          quantity: item.quantity,
-          price_at_time: item.product.onSale ? item.product.sales_price : item.product.price
+    begin
+      ActiveRecord::Base.transaction do
+        Rails.logger.debug "Creating order with Total with Tax: #{@total}, Tax: #{@tax}, Shipping Address ID: #{params[:payment][:address_id]}"
+
+        @order = current_user.orders.create!(
+          total_with_tax: @total,
+          tax: @tax,
+          status: :pending,
+          shipping_address_id: params[:payment][:address_id]
         )
-      end
 
-      if @order.save
-        @cart.destroy  # Clear the cart after order is placed
-        redirect_to order_path(@order), notice: "Your order has been placed successfully."
-      else
-        render :new, alert: "There was an error processing your order."
+        Rails.logger.debug "Order created successfully: #{@order.inspect}"
+
+        raise "Cart items are empty" if @cart.cart_items.empty?
+
+        @cart.cart_items.each do |item|
+          @order.order_items.create!(
+            product_id: item.product_id,
+            quantity: item.quantity,
+            price_at_time: item.product.onSale ? item.product.sales_price : item.product.price
+          )
+        end
+
+        Rails.logger.debug "Attempting to charge the customer with Stripe"
+        charge = Stripe::Charge.create(
+          amount: (@order.total_with_tax * 100).to_i, # amount in cents
+          currency: 'cad',
+          description: 'Product purchase',
+          source: params[:stripeToken]
+        )
+
+        Rails.logger.debug "Stripe Charge Response: #{charge.inspect}"
+
+        if charge.paid
+          @order.update(status: :paid)
+          @cart.destroy  # Clear the cart after order is placed
+          redirect_to order_path(@order), notice: "Your order has been placed successfully."
+        else
+          raise Stripe::CardError.new("Card was declined.")
+        end
       end
+    rescue Stripe::CardError => e
+      Rails.logger.error "Stripe Card Error: #{e.message}"
+      redirect_to new_payment_path, alert: "Payment failed: #{e.message}"
+    rescue => e
+      Rails.logger.error "General Error during payment: #{e.message}"
+      redirect_to new_payment_path, alert: "Failed to create order: #{e.message}"
     end
-  rescue => e
-    redirect_to new_payment_path, alert: "Failed to create order: #{e.message}"
   end
 
 

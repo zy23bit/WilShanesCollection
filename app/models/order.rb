@@ -5,7 +5,7 @@ class Order < ApplicationRecord
 
   validates :shipping_address_id, presence: true
 
-  enum status: { pending: 0, confirmed: 1, shipped: 2, delivered: 3, cancelled: 4 }
+  enum status: { pending: 0, confirmed: 1, shipped: 2, delivered: 3, cancelled: 4, paid: 5}
 
   def self.ransackable_associations(auth_object = nil)
     ['user', 'order_items']  # Allows searching through user and order_items associations

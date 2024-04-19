@@ -37,7 +37,8 @@ gem 'jquery-rails'
 gem 'popper_js'
 gem 'kaminari'
 gem 'webpacker'
-
+gem 'stripe'
+gem 'stripe_event'
 
 
 # Use Redis adapter to run Action Cable in production
