@@ -1,6 +1,5 @@
 <div class="container mt-5">
   <div class="row">
-    <!-- Product Image -->
     <div class="col-lg-8 mb-4">
       <% if @product.commercial_picture.attached? %>
         <%= image_tag(url_for(@product.commercial_picture), class: 'img-fluid rounded shadow') %>
@@ -11,7 +10,6 @@
       <% end %>
     </div>
 
-    <!-- Product Details -->
     <div class="col-lg-4">
       <h1 class="display-6"><%= @product.name %></h1>
       <% if @product.onSale %>
