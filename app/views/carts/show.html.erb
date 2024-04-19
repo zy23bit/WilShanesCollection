@@ -2,57 +2,56 @@
   <h2 class="mb-4">Shopping Cart</h2>
   <% if @cart_items.any? %>
     <div class="table-responsive">
-      <table class="table table-hover">
-        <thead class="table-light">
+      <table class="table table-hover shadow">
+        <thead class="table-dark">
           <tr>
             <th scope="col">Item</th>
             <th scope="col">Price</th>
             <th scope="col">Quantity</th>
             <th scope="col">Subtotal</th>
-            <th scope="col" style="width: 150px;"></th>
+            <th scope="col" style="width: 150px;">Remove</th>
           </tr>
         </thead>
         <tbody>
           <% @cart_items.each do |item| %>
             <tr>
-              <td><%= item.product.name %></td>
-              <td>
+              <td class="align-middle"><%= item.product.name %></td>
+              <td class="align-middle">
                 <% if item.product.onSale %>
                   <span class="text-danger"><%= number_to_currency(item.product.sales_price) %></span>
+                  <del class="small text-muted"><%= number_to_currency(item.product.price) %></del>
                 <% else %>
                   <%= number_to_currency(item.product.price) %>
                 <% end %>
               </td>
               <td>
-                <%= form_with(model: [item], local: true, class: 'd-flex') do |f| %>
+                <%= form_with(model: [item], local: true, class: 'd-flex justify-content-start align-items-center') do |f| %>
                   <%= f.number_field :quantity, value: item.quantity, min: 1, class: 'form-control', style: 'width: 70px; margin-right: 10px;' %>
-                  <%= f.submit 'Update', class: 'btn btn-info btn-sm' %>
+                  <%= f.submit 'Update', class: 'btn btn-outline-secondary btn-sm' %>
                 <% end %>
               </td>
-              <td>
+              <td class="align-middle">
                 <% if item.product.onSale %>
                   <%= number_to_currency(item.quantity * item.product.sales_price) %>
                 <% else %>
                   <%= number_to_currency(item.quantity * item.product.price) %>
                 <% end %>
               </td>
-              <td>
-                <%= button_to 'Remove', cart_item_path(item), method: :delete, data: { confirm: 'Are you sure?' }, class: 'btn btn-danger btn-sm' %>
+              <td class="align-middle">
+                <%= button_to 'X', cart_item_path(item), method: :delete, data: { confirm: 'Are you sure?' }, class: 'btn btn-outline-danger btn-sm' %>
               </td>
             </tr>
           <% end %>
         </tbody>
       </table>
     </div>
-    <div class="d-flex justify-content-between align-items-center">
-      <h4>Total:
-        <%= number_to_currency(@cart_items.sum { |item| item.quantity * (item.product.sales_price.present? ? item.product.sales_price : item.product.price) }) %>
-      </h4>
+    <div class="d-flex justify-content-between align-items-center mt-4">
+      <h4 class="total-price">Total: <%= number_to_currency(@cart_items.sum { |item| item.quantity * (item.product.sales_price.present? ? item.product.sales_price : item.product.price) }) %></h4>
       <%= link_to 'Proceed to Payment', new_payment_path, class: 'btn btn-secondary text-white ms-3' %>
     </div>
   <% else %>
-    <div class="alert alert-info" role="alert">
-      Your cart is empty.
+    <div class="alert alert-info text-center" role="alert">
+      Your cart is empty. <a href="<%= products_path %>" class="alert-link">Start shopping now!</a>
     </div>
   <% end %>
 </div>
