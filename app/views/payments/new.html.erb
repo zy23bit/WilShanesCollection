@@ -1,131 +1,132 @@
 <div class="container mt-5">
-  <h2 class="mb-4">Proceed to Payment</h2>
-  <%= form_for :payment, url: payments_path, method: :post, html: {id: 'payment-form', class: 'needs-validation', novalidate: true } do |f| %>
-    <div class="mb-3">
-      <%= f.label :address_id, "Select Shipping Address", class: 'form-label', for: "addressSelect" %>
-      <%= f.collection_select :address_id, @user_addresses, :id,
-           ->(address) { "#{address.name},#{address.address}, #{address.city}, #{address.province}, #{address.zip}" },
-           { include_blank: 'Please select an address...' },
-           { id: "addressSelect", onchange: "updateTaxAndTotal()", class: 'form-select' } %>
-      <%= f.hidden_field :shipping_address_id, id: "shippingAddressId" %>
-    </div>
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <h2 class="mb-4 text-center">Proceed to Payment</h2>
+      <%= form_for :payment, url: payments_path, method: :post, html: { id: 'payment-form', class: 'needs-validation shadow-lg p-4 bg-white rounded', novalidate: true } do |f| %>
+        <div class="mb-3">
+          <%= f.label :address_id, "Select Shipping Address", class: 'form-label' %>
+          <%= f.collection_select :address_id, @user_addresses, :id,
+              ->(address) { "#{address.name},#{address.address}, #{address.city}, #{address.province}, #{address.zip}" },
+              { include_blank: 'Please select an address...' },
+              { id: "addressSelect", onchange: "updateTaxAndTotal()", class: 'form-select' } %>
+          <%= f.hidden_field :shipping_address_id, id: "shippingAddressId" %>
+        </div>
 
-    <div class="mb-3">
-      <%= link_to 'Add New Address', new_user_address_path(current_user, redirect_to: request.fullpath), class: 'btn btn-outline-primary' %>
-    </div>
+        <div class="text-end mb-3">
+          <%= link_to 'Add New Address', new_user_address_path(current_user, redirect_to: request.fullpath), class: 'btn btn-outline-primary btn-sm' %>
+        </div>
 
-    <div class="card mb-4">
-      <div class="card-header">
-        <h3 class="mb-0">Your Cart</h3>
-      </div>
-      <ul class="list-group list-group-flush">
-        <% @cart_items.each do |item| %>
-          <li class="list-group-item">
-            <%= item.product.name %> - Quantity: <%= item.quantity %> -
-            Price:
-            <% if item.product.onSale %>
-              <%= number_to_currency(item.product.sales_price) %>
-            <% else %>
-              <%= number_to_currency(item.product.price) %>
+        <div class="card mb-3">
+          <div class="card-header bg-dark text-white">
+            <h3 class="mb-0">Your Cart</h3>
+          </div>
+          <ul class="list-group list-group-flush">
+            <% @cart_items.each do |item| %>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span><%= item.product.name %></span>
+                <span>Quantity: <%= item.quantity %></span>
+                <span>Price: <%= number_to_currency(item.product.onSale ? item.product.sales_price : item.product.price) %></span>
+              </li>
             <% end %>
-          </li>
-        <% end %>
-      </ul>
+          </ul>
+        </div>
+
+        <div class="card mb-4">
+          <div class="card-body">
+            <h4 class="card-title">Order Summary</h4>
+            <p class="card-text">Subtotal: <%= number_to_currency(@subtotal) %></p>
+            <p class="card-text">Tax: <span id="tax"><%= number_to_currency(@tax) %></span></p>
+            <%= f.hidden_field :tax, value: @tax %>
+            <p class="card-text">Total: <span id="total"><%= number_to_currency(@total) %></span></p>
+            <%= f.hidden_field :total, value: @total %>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label for="card-element" class="form-label">Credit or Debit Card</label>
+          <div id="card-element" class="form-control"></div>
+          <div id="card-errors" role="alert" class="text-danger mt-2"></div>
+        </div>
+
+        <%= f.submit 'Confirm Payment', class: 'btn btn-primary btn-lg btn-block' %>
+      <% end %>
     </div>
-
-    <div class="card mb-4">
-      <div class="card-body">
-        <p class="card-text">Subtotal: <%= number_to_currency(@subtotal) %></p>
-        <p class="card-text">Tax: <span id="tax"><%= number_to_currency(@tax) %></span></p>
-        <%= f.hidden_field :tax, value: @tax %>
-        <p class="card-text">Total: <span id="total"><%= number_to_currency(@total) %></span></p>
-        <%= f.hidden_field :total, value: @total %>
-      </div>
-      <label for="card-element">
-        Credit or debit card
-      </label>
-      <div id="card-element">
-      </div>
-      <div id="card-errors" role="alert"></div>
-
-
-    <%= f.submit 'Confirm Payment', class: 'btn btn-success btn-lg btn-block' %>
-  <% end %>
+  </div>
 </div>
 
-<script>
-function updateTaxAndTotal() {
-  const addressSelect = document.getElementById('addressSelect');
-  const addressId = addressSelect.value;
-  console.log('Address ID selected:', addressId);
+  <script>
+  function updateTaxAndTotal() {
+    const addressSelect = document.getElementById('addressSelect');
+    const addressId = addressSelect.value;
+    console.log('Address ID selected:', addressId);
 
-  if (!addressId) {
-    console.log('No address selected');
-    return;
+    if (!addressId) {
+      console.log('No address selected');
+      return;
+    }
+
+    fetch(`/payments/calculate_tax?address_id=${addressId}`)
+      .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+      })
+      .then(data => {
+        document.getElementById('tax').textContent = data.tax;
+        document.getElementById('total').textContent = data.total;
+      })
+      .catch(error => {
+        console.error('Error updating tax and total:', error);
+      });
   }
+  </script>
+  <script>
+    var stripe = Stripe('<%= Rails.application.credentials.dig(:stripe, :public_key) %>');
 
-  fetch(`/payments/calculate_tax?address_id=${addressId}`)
-    .then(response => {
-      if (!response.ok) throw new Error('Network response was not ok');
-      return response.json();
-    })
-    .then(data => {
-      document.getElementById('tax').textContent = data.tax;
-      document.getElementById('total').textContent = data.total;
-    })
-    .catch(error => {
-      console.error('Error updating tax and total:', error);
-    });
-}
-</script>
-<script>
-  var stripe = Stripe('<%= Rails.application.credentials.dig(:stripe, :public_key) %>');
+    var elements = stripe.elements();
 
-  var elements = stripe.elements();
+    var style = {
+      base: {
+        color: "#32325d",
+      }
+    };
 
-  var style = {
-    base: {
-      color: "#32325d",
-    }
-  };
+    var card = elements.create('card', {style: style});
 
-  var card = elements.create('card', {style: style});
+    card.mount('#card-element');
 
-  card.mount('#card-element');
-
-  card.addEventListener('change', function(event) {
-    var displayError = document.getElementById('card-errors');
-    if (event.error) {
-      displayError.textContent = event.error.message;
-    } else {
-      displayError.textContent = '';
-    }
-  });
-
-  var form = document.getElementById('payment-form');
-  form.addEventListener('submit', function(event) {
-    event.preventDefault();
-
-    stripe.createToken(card).then(function(result) {
-      if (result.error) {
-        var errorElement = document.getElementById('card-errors');
-        errorElement.textContent = result.error.message;
+    card.addEventListener('change', function(event) {
+      var displayError = document.getElementById('card-errors');
+      if (event.error) {
+        displayError.textContent = event.error.message;
       } else {
-        stripeTokenHandler(result.token);
+        displayError.textContent = '';
       }
     });
-  });
 
-  function stripeTokenHandler(token) {
     var form = document.getElementById('payment-form');
-    var hiddenInput = document.createElement('input');
-    hiddenInput.setAttribute('type', 'hidden');
-    hiddenInput.setAttribute('name', 'stripeToken');
-    hiddenInput.setAttribute('value', token.id);
-    form.appendChild(hiddenInput);
+    form.addEventListener('submit', function(event) {
+      event.preventDefault();
 
-    form.submit();
-  }
-</script>
+      stripe.createToken(card).then(function(result) {
+        if (result.error) {
+          var errorElement = document.getElementById('card-errors');
+          errorElement.textContent = result.error.message;
+        } else {
+          stripeTokenHandler(result.token);
+        }
+      });
+    });
+
+    function stripeTokenHandler(token) {
+      var form = document.getElementById('payment-form');
+      var hiddenInput = document.createElement('input');
+      hiddenInput.setAttribute('type', 'hidden');
+      hiddenInput.setAttribute('name', 'stripeToken');
+      hiddenInput.setAttribute('value', token.id);
+      form.appendChild(hiddenInput);
+
+      form.submit();
+    }
+  </script>
 
 
